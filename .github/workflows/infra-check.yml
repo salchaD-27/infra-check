@@ -21,7 +21,8 @@ jobs:
 
       - name: Build InfraCheck binary
         run: |
-          go build -o infra-check ./cmd/main.go
+          go build -o infra-check ./cmd/infra-check/cmd/main.go
+
 
       - name: Run InfraCheck on Terraform code
         run: |
