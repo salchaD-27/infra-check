@@ -1,0 +1,145 @@
+Terraform Checks
+Hardcoded Secrets: Detect sensitive values like passwords, tokens, and API keys hardcoded in variables or resource attributes.
+Missing Required Tags: Warn when critical tags like Environment, Owner, or Project are not defined on resources.
+Deprecated Resource Types: Warn about usage of deprecated Terraform resource types, guiding users to modern alternatives.
+
+Ansible Checks
+Missing or Disabled become Field: Warn if tasks lack privilege escalation (become) or have it set to false.
+Unused Variables: Identify defined but unused variables in playbooks.
+Deprecated Modules: Warn about use of deprecated or removed Ansible modules.
+Hardcoded Secrets: Detect password or token literals in playbooks.
+Missing Required Fields: Enforce presence of required fields in tasks (e.g., name, hosts).
+
+Puppet Checks
+Linting via puppet-lint: Run puppet-lint externally and parse its warnings/errors.
+Deprecated Syntax or Resources: Detect deprecated Puppet resource types or syntax styles.
+Missing Class Declaration: Enforce Puppet manifest standard structures.
+Hardcoded Credentials: Flag sensitive hardcoded strings in manifests.
+Trailing Whitespace and Style Issues: Enforce code style consistency.
+Unmanaged Resources or Parameters: Warn on disallowed or unused parameters.
+
+
+
+Step 1: Create Your Project Repository
+Create a new directory for your project and initialize Git:
+mkdir infra-check
+cd infra-check
+git init
+
+Initialize a Go module:
+go mod init github.com/yourusername/infra-check
+
+
+
+Step 2: Install the CLI Scaffolding Tool (cobra-cli)
+You need to use cobra-cli (not cobra) to scaffold your CLI commands.
+Install cobra-cli:
+go install github.com/spf13/cobra-cli@latest
+Ensure your Go bin directory is in your PATH environment variable:
+
+Add the following to your ~/.zshrc file:
+export PATH=$HOME/go/bin:$PATH
+After adding, reload your shell:
+source ~/.zshrc
+Verify the installation:
+cobra-cli --version
+
+
+
+Step 3: Scaffold Your CLI Project Structure
+Move into your project directory and run:
+cobra-cli init --pkg-name github.com/yourusername/infra-check --module
+This creates the base CLI framework in your project.
+
+
+
+Step 4: Add the scan Subcommand and Terraform Support
+Run these inside your project root:
+cobra-cli add scan
+cobra-cli add terraform --parent scan
+This creates a command structure so you can run:
+infra-check scan terraform
+
+
+
+Step 5: Create Your Folder Structure
+Set up the basic folders to organize your code:
+mkdir -p internal/terraform tests
+internal/terraform will hold Terraform-specific parsing logic.
+tests will have example IaC files and test cases.
+
+
+
+Step 6: Write Basic Terraform Scan Logic
+Inside internal/terraform/terraform.go (create this file), add code to scan the directory and print any found .tf files (a simple starting point).
+
+
+Step 7: Wire Scan Logic to CLI Command
+In cmd/infra-check/scanTerraform.go (created by cobra-cli add terraform), import your package and call the Scan function with the provided path.
+
+
+
+Step 8: Run and Test
+Run your CLI on a sample directory with Terraform files:
+salchad27@MacDA infra-check % go run main.go scan terraform ../../tests/sample-terraform-files
+terraform called
+Found Terraform file: ../../tests/sample-terraform-files/test1.tf
+Found Terraform file: ../../tests/sample-terraform-files/test2.tf
+Found Terraform file: ../../tests/sample-terraform-files/test3.tf
+Found Terraform file: ../../tests/sample-terraform-files/test4.tf
+
+
+Step 9: Enhance Terraform Scanning Logic
+Instead of just listing .tf files, start parsing them with the HCL parser (github.com/hashicorp/hcl/v2).
+Extract resource blocks, variable declarations, and detect simple issues (e.g., public S3 buckets).
+Add Findings with Severity
+Create a data structure to represent findings (e.g., Info, Warning, Error).
+Report these findings instead of just printing filenames.
+Implement Output Formatting
+Output results as Markdown, JSON, or simple console text.
+Possibly add flags to the CLI command to select output format.
+
+
+Step 10: Add Ansible Support
+Overview:
+Ansible playbooks are YAML files.
+Use a Go YAML parser such as gopkg.in/yaml.v3 to parse the playbooks.
+Perform simple checks, e.g., detect tasks missing the become field which is important for privilege escalation.
+Key Steps:
+Add a new CLI subcommand:
+infra-check scan ansible <path>
+Parse YAML playbooks:
+Recursively scan .yml or .yaml files in the path, parse them to Go structs or generic maps.
+Check for missing become in tasks:
+An Ansible playbook has plays each containing a list of tasks. Check each task for the optional boolean become field. Warn if missing per your policy.
+
+
+Step 11: Reporting Exporters
+Create a new package internal/report with subpackages or files for different output formats, e.g.,
+internal/report/markdown.go
+internal/report/json.go
+internal/report/githubactions.go
+(optional) internal/report/html.go
+
+In your scan command handlers (Terraform, Ansible, Puppet):
+After scanning and getting []Finding, add a flag like --report-format with options text, json, markdown, gha (GitHub Actions).
+Call the relevant exporter and print the string.
+
+
+
+
+
+
+Root CLI Architecture (Summary)
+Under scan, you have subcommands per IaC tool:
+terraform
+ansible
+puppet
+
+Each subcommand accepts exactly one positional argument for path to scan.
+Each supports --format (or shorthand -f) flag with options:
+text (default), json, markdown, gha (GitHub Actions annotations).
+
+Terraform: go run main.go scan terraform ../../tests/sample-terraform-files --format markdown
+Ansible: go run main.go scan ansible ../../tests/sample-ansible-files --format markdown
+Puppet: go run main.go scan puppet ../../tests/sample-puppet-files --format markdown

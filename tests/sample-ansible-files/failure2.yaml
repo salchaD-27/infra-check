@@ -1,0 +1,14 @@
+# Play missing required hosts field.
+# Task sets app_secret with a hardcoded literal secret.
+# Last task missing become and name.
+# command module used (considered deprecated in your checks).
+
+- name: Deploy app
+  tasks:
+    - name: Set application secret
+      setup:
+        app_secret: "supersecret123"
+      become: true
+
+    - name: Run app deployment
+      command: ./deploy.sh

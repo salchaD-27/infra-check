@@ -1,0 +1,13 @@
+# Tasks lack name fields.
+# become missing and become: false flag on one task.
+# Uses deprecated module shell.
+# The play itself has no top-level name.
+# No become on some tasks.
+
+- hosts: all
+  tasks:
+    - apt:
+        name: curl
+        state: present
+    - shell: echo "Hello World"
+      become: false

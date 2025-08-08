@@ -1,0 +1,26 @@
+# Play defines hosts.
+# Tasks all have name fields.
+# become is specified.
+# Uses non-deprecated modules like apt and service.
+# No hardcoded secrets.
+
+- name: Install and start Nginx web server
+  hosts: webservers
+  become: true
+  tasks:
+    # - name: Install Nginx
+    #   apt:
+    #     name: nginx
+    #     state: latest
+    #   become: true
+    - name: Install Nginx
+      apt_key:
+        name: nginx
+        state: latest
+      become: true
+
+    # - name: Start Nginx service
+    #   service:
+    #     name: nginx
+    #     state: started
+    #   become: true
