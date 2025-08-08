@@ -27,13 +27,17 @@ jobs:
       # run: |
       #   ./infra-check scan terraform ./terraform --format gha --fail-on warn
         run: |
-          ./infra-check scan terraform ./terraform --format gha
+          ./infra-check scan terraform ./test/sample-terraform-files --format gha
         continue-on-error: false  # Fail GitHub Action if warn or error
 
       # scan Ansible and Puppet as well
       - name: Run InfraCheck on Ansible playbooks
         # run: ./infra-check scan ansible ./ansible --format gha --fail-on warn
-        run: ./infra-check scan ansible ./ansible --format gha
+        run: ./infra-check scan ansible ./test/sample-ansible-files --format gha
+      
+      - name: Run InfraCheck on Puppet files
+        # run: ./infra-check scan ansible ./ansible --format gha --fail-on warn
+        run: ./infra-check scan puppet ./test/sample-puppet-files --format gha
 
       # - name: Run InfraCheck on Puppet manifests
       #   run: ./infra-check scan puppet ./puppet --format gha --fail-on warn
