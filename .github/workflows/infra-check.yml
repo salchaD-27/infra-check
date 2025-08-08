@@ -20,9 +20,8 @@ jobs:
           go-version: '1.23.5'
 
       - name: Build InfraCheck binary
-        working-directory: ./cmd/infra-check/cmd
         run: |
-          go build -o infra-check main.go
+          go build -o infra-check ./cmd/infra-check/cmd/main.go
 
 
       - name: Run InfraCheck on Terraform code
