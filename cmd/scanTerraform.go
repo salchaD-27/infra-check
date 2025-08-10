@@ -58,7 +58,6 @@ var terraformCmd = &cobra.Command{
 }
 
 func init() {
-	// flags and configuration settings.
 	terraformCmd.Flags().StringVarP(&reportFormat, "format", "f", "text", "Output format: text|json|markdown|gha")
 
 	// Cobra supports Persistent Flags which will work for this command

@@ -1,3 +1,4 @@
+// static analysis of Ansible playbooks
 package ansible
 
 import (
@@ -12,9 +13,9 @@ import (
 	"github.com/salchaD-27/infra-check/internal/finding"
 )
 
-type Task map[string]interface{}
+type Task map[string]interface{} // a map representing an Ansible task
 
-type Play struct {
+type Play struct { // represents an Ansible "play" (the unit in a playbook file).
 	Hosts interface{}            `yaml:"hosts"` // required field check
 	Tasks []Task                 `yaml:"tasks"`
 	Vars  map[string]interface{} `yaml:"vars,omitempty"` // Add this field
@@ -80,6 +81,11 @@ func containsSecretKeyword(s string) bool {
 func Scan(path string) ([]finding.Finding, error) {
 	var findings []finding.Finding
 
+	// 	Walking Filesystem
+	// For every file in path, checks extension (.yml/.yaml).
+	// Ignores directories and files with other extensions.
+	// Read YAML File, file contents.
+	// Parses YAML file into a slice of Play.
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
@@ -114,6 +120,18 @@ func Scan(path string) ([]finding.Finding, error) {
 		definedVars := make(map[string]bool)
 		usedVars := make(map[string]bool)
 
+		// Task Checks (for every play, every task):
+		// Privilege:
+		// Checks if become field is missing (warns: escalation not specified).
+		// If present but false, warns about possible privilege issue.
+		// Task Name:
+		// Checks if name field is missing.
+		// Deprecated Module Detection:
+		// For each key in the task (other than expected ones), if key matches a deprecated module, reports it.
+		// Hardcoded Secret Detection:
+		// If any key in the task or attribute contains a secret keyword and value is a non-empty string, flags it as a potential secret leak.
+		// Variable Usage Tracking:
+		// If a string value contains Ansible variable syntax (e.g., {{ my_var }}), extracts the variable name(s) for usage tracking.
 		for _, play := range plays {
 			// Check required field 'hosts'
 			if play.Hosts == nil {
